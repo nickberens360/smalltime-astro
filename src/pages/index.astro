@@ -1,26 +1,39 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { fetchAllPrintifyData } from '../lib/printify';
+import { getPrintifyData, getPrintifyProducts } from '../lib/printify';
 import { toSlug } from '../lib/utils';
 import HeroBanner from '../components/HeroBanner.vue';
+// import stScript from '/src/assets/st-script.png';
 import ProductCard from '../components/ProductCard.vue';
 
-const { shops, productsByShop } = await fetchAllPrintifyData();
+const shopsResponse = await getPrintifyData();
+const shops = shopsResponse.success ? shopsResponse.data : [];
 
-const categoriesWithImages = shops.map(shop => {
-  const products = productsByShop.get(shop.id) || [];
-  const firstVisibleProduct = products.find(p => p.visible);
+const categoriesWithData = await Promise.all(
+    shops.map(async (shop) => {
+      const productsResponse = await getPrintifyProducts(shop.id);
+      const visibleProducts = productsResponse.success
+          ? productsResponse.products.filter(p => p.visible)
+          : [];
 
-  const imageUrl = firstVisibleProduct
-      ? firstVisibleProduct.images.find(img => img.is_default)?.src || firstVisibleProduct.images[0]?.src
-      : '/src/assets/placeholder.png';
+      const firstVisibleProduct = visibleProducts.length > 0 ? visibleProducts[0] : null;
 
-  return {
-    title: shop.title,
-    slug: toSlug(shop.title),
-    imageSrc: imageUrl
-  };
-});
+      const imageUrl = firstVisibleProduct
+          ? firstVisibleProduct.images.find(img => img.is_default)?.src || firstVisibleProduct.images[0]?.src
+          : '/src/assets/placeholder.png';
+
+      return {
+        title: shop.title,
+        slug: toSlug(shop.title),
+        imageSrc: imageUrl,
+        // Add a count of visible products to use for filtering
+        productCount: visibleProducts.length
+      };
+    })
+);
+
+// Only include categories that have one or more visible products
+const visibleCategories = categoriesWithData.filter(category => category.productCount > 0);
 ---
 
 <Layout title="Smalltime - Welcome to the Shop">
@@ -35,9 +48,9 @@ const categoriesWithImages = shops.map(shop => {
 
   <div class="category-grid-container">
     <h2>Shop by Category</h2>
-    {categoriesWithImages.length > 0 ? (
+    {visibleCategories.length > 0 ? (
         <ul class="product-grid">
-          {categoriesWithImages.map(category => (
+          {visibleCategories.map(category => (
               <li>
                 <ProductCard
                     client:visible
@@ -50,7 +63,7 @@ const categoriesWithImages = shops.map(shop => {
         </ul>
     ) : (
         <p class="error-message">
-          Could not load categories at this time.
+          No product categories are available at this time.
         </p>
     )}
   </div>
