@@ -19,14 +19,16 @@ const categoryTitle = shop.title;
 const shopSlug = toSlug(shop.title);
 
 const productsResponse = await getPrintifyProducts(shop.id);
-const products = productsResponse.success ? productsResponse.products : [];
+// Filter for visible products only
+const visibleProducts = productsResponse.success
+    ? productsResponse.products.filter(p => p.visible)
+    : [];
 
+// Generate sub-categories (tags) only from visible products
 const allTags = new Set<string>();
-if (products) {
-  products.forEach(product => {
-    product.tags.forEach(tag => allTags.add(tag));
-  });
-}
+visibleProducts.forEach(product => {
+  product.tags.forEach(tag => allTags.add(tag));
+});
 const subCategories = Array.from(allTags);
 ---
 <Layout title={`Shop - ${categoryTitle}`}>
@@ -48,10 +50,10 @@ const subCategories = Array.from(allTags);
   )}
 
   <h2 class="all-products-title">All Products in {categoryTitle}</h2>
-  {products.length === 0 && <p class="error-message">No products found in this category.</p>}
+  {visibleProducts.length === 0 && <p class="error-message">No products found in this category.</p>}
 
   <ul class="product-grid">
-    {products.map(product => {
+    {visibleProducts.map(product => {
       const imageSrc = product.images.find(img => img.is_default)?.src || product.images[0]?.src;
       const price = product.variants.find(v => v.is_enabled)?.price / 100;
       const productSlug = toSlug(product.title);

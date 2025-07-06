@@ -18,13 +18,16 @@ export async function getStaticPaths() {
         const productsResponse = await getPrintifyProducts(shop.id, currentPage);
         if (productsResponse.success) {
           for (const product of productsResponse.products) {
-            allPaths.push({
-              params: {
-                shopSlug: toSlug(shop.title),
-                productSlug: toSlug(product.title),
-              },
-              props: { product },
-            });
+            // Only create a page if the product is visible
+            if (product.visible) {
+              allPaths.push({
+                params: {
+                  shopSlug: toSlug(shop.title),
+                  productSlug: toSlug(product.title),
+                },
+                props: { product },
+              });
+            }
           }
           lastPage = productsResponse.lastPage;
         }
