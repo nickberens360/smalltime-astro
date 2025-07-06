@@ -1,36 +1,25 @@
 ---
 import { getPrintifyData, getPrintifyProducts } from '../../lib/printify';
+import { toSlug } from '../../lib/utils'; // Import the helper
 import Layout from '../../layouts/Layout.astro';
 import ProductCard from '../../components/ProductCard.vue';
 
-const { slug: shopSlug } = Astro.params;
+export async function getStaticPaths() {
+  const shopsResponse = await getPrintifyData();
+  const shops = shopsResponse.success ? shopsResponse.data : [];
 
-const shopsResponse = await getPrintifyData();
-let shopId = null;
-let categoryTitle = 'Category';
-let products = [];
-let error = null;
-
-const toSlug = (str) => str.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-
-if (shopsResponse.success) {
-  const currentShop = shopsResponse.data.find(shop => toSlug(shop.title) === shopSlug);
-
-  if (currentShop) {
-    shopId = currentShop.id;
-    categoryTitle = currentShop.title;
-    const productsResponse = await getPrintifyProducts(shopId);
-    if (productsResponse.success) {
-      products = productsResponse.products;
-    } else {
-      error = productsResponse.error;
-    }
-  } else {
-    error = `Category "${shopSlug}" not found.`;
-  }
-} else {
-  error = shopsResponse.error;
+  return shops.map((shop) => ({
+    params: { slug: toSlug(shop.title) },
+    props: { shop },
+  }));
 }
+
+const { shop } = Astro.props;
+const categoryTitle = shop.title;
+const shopSlug = toSlug(shop.title);
+
+const productsResponse = await getPrintifyProducts(shop.id);
+const products = productsResponse.success ? productsResponse.products : [];
 ---
 <Layout title={`Shop - ${categoryTitle}`}>
   <div class="category-header">
@@ -38,25 +27,27 @@ if (shopsResponse.success) {
     {products && <p>Browse {products.length} product(s)</p>}
   </div>
 
-  {error && <p class="error-message">{error}</p>}
+  {products.length === 0 && <p class="error-message">No products found in this category.</p>}
 
-  <div class="product-grid">
-    {products && products.map(product => {
+  <ul class="product-grid">
+    {products.map(product => {
       const imageSrc = product.images.find(img => img.is_default)?.src || product.images[0]?.src;
       const price = product.variants.find(v => v.is_enabled)?.price / 100;
       const productSlug = toSlug(product.title);
 
       return (
-          <ProductCard
-              client:visible
-              title={product.title}
-              price={price}
-              imageSrc={imageSrc}
-              href={`/products/${shopSlug}/${productSlug}`}
-          />
+          <li>
+            <ProductCard
+                client:visible
+                title={product.title}
+                price={price}
+                imageSrc={imageSrc}
+                href={`/products/${shopSlug}/${productSlug}`}
+            />
+          </li>
       )
     })}
-  </div>
+  </ul>
 </Layout>
 
 <style>
@@ -69,13 +60,14 @@ if (shopsResponse.success) {
   }
   .product-grid {
     display: grid;
+    list-style: none;
+    padding: 0 2rem 2rem;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 2rem;
-    padding: 0 2rem 2rem;
   }
   .error-message {
     text-align: center;
-    color: red;
+    color: #991b1b;
     padding: 2rem;
   }
 </style>

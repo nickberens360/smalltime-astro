@@ -1,51 +1,51 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
-import { getPrintifyData, getPrintifyProducts, getPrintifyProduct } from '../../../lib/printify';
+import { getPrintifyData, getPrintifyProducts } from '../../../lib/printify';
 import ImageSlider from '../../../components/ImageSlider.vue';
 import ProductOptions from '../../../components/ProductOptions.vue';
 
-const { shopSlug, productSlug } = Astro.params;
-
-let product = null;
-let error = null;
-
 const toSlug = (str) => str.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
-const shopsResponse = await getPrintifyData();
-if (!shopsResponse.success) {
-  error = "Could not fetch shop information from Printify.";
-} else {
-  const currentShop = shopsResponse.data.find(s => toSlug(s.title) === shopSlug);
+// This function runs once at build time to build ALL product pages
+export async function getStaticPaths() {
+  console.log("Fetching all products to build static pages...");
+  const shopsResponse = await getPrintifyData();
+  const allPaths = [];
 
-  if (!currentShop) {
-    error = `Shop '${shopSlug}' could not be found.`;
-  } else {
-    const productsResponse = await getPrintifyProducts(currentShop.id);
-
-    if (!productsResponse.success) {
-      error = "Could not fetch product list from Printify.";
-    } else {
-      const currentProductMeta = productsResponse.products.find(p => toSlug(p.title) === productSlug);
-
-      if (!currentProductMeta) {
-        error = `Product '${productSlug}' could not be found in this shop.`;
-      } else {
-        const finalProductResponse = await getPrintifyProduct(currentShop.id, currentProductMeta.id);
-        if (finalProductResponse.success) {
-          product = finalProductResponse.product;
-        } else {
-          error = finalProductResponse.error;
+  if (shopsResponse.success) {
+    for (const shop of shopsResponse.data) {
+      // For a static site, we fetch all pages of products for each shop
+      let currentPage = 1;
+      let lastPage = 1;
+      do {
+        const productsResponse = await getPrintifyProducts(shop.id, currentPage);
+        if (productsResponse.success) {
+          for (const product of productsResponse.products) {
+            allPaths.push({
+              params: {
+                shopSlug: toSlug(shop.title),
+                productSlug: toSlug(product.title),
+              },
+              props: { product }, // Pass the full product data as a prop
+            });
+          }
+          lastPage = productsResponse.lastPage;
         }
-      }
+        currentPage++;
+      } while (currentPage <= lastPage);
     }
   }
+
+  console.log(`Generated ${allPaths.length} total product pages.`);
+  return allPaths;
 }
+
+const { product } = Astro.props;
 ---
 
 <Layout title={product ? product.title : 'Product'}>
   <div class="product-detail-container">
-    {error && <p class="error-message">{error}</p>}
-    {product && (
+    {product ? (
         <div class="product-layout">
           <div class="product-images">
             {product.images.length > 1 ? (
@@ -57,10 +57,11 @@ if (!shopsResponse.success) {
           <div class="product-info">
             <h1>{product.title}</h1>
             <div class="description" set:html={product.description}></div>
-
             <ProductOptions client:load product={product} />
           </div>
         </div>
+    ) : (
+        <p class="error-message">Could not find product details. This page may not have been built correctly.</p>
     )}
   </div>
 </Layout>
