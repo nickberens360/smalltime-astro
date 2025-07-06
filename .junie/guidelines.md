@@ -3,6 +3,7 @@
 # Code Generation Rules
 - Do not analyze *.BAK or.bak files
 - Use Vue for UI components
+
 ## General Guidelines
 
 - Keep changes minimal

@@ -1,18 +1,13 @@
 ---
-// Import the Layout component and the server-side logic function
 import Layout from '../layouts/Layout.astro';
 import { getPrintifyData } from '../lib/printify';
+import ApiResult from '../components/ApiResult.vue';
+import PrintifyTester from '../components/PrintifyTester.vue';
 
-// Call the function on the server to get data for the initial page render.
-// This runs securely on the server, never in the browser.
+// Fetch initial data on the server
 const initialResult = await getPrintifyData();
-const { success, error, message, shops, firstShopName, data } = initialResult;
+const { success, error, ...initialData } = initialResult;
 ---
-
-<!--
-  The Layout component wraps all your page content.
-  The 'title' prop is passed to the Layout to set the page title dynamically.
--->
 <Layout title="Test - Printify Integration">
   <h1>Printify API Test</h1>
 
@@ -20,129 +15,36 @@ const { success, error, message, shops, firstShopName, data } = initialResult;
     <h2>Initial Server-Side Result</h2>
     <p>This data was fetched on the server when the page was generated.</p>
 
-    <!-- This block shows the result from the initial server render -->
-    {error && (
-        <div class="result-box error">
-          <h3>❌ Error:</h3>
-          <p>{error}</p>
-          <p><small>Check your server console and make sure your .env file has PRINTIFY_API_TOKEN set.</small></p>
-        </div>
-    )}
+    <ApiResult
+        client:visible
+        status={success ? 'success' : 'error'}
+        data={initialData}
+        errorMessage={error}
+    />
 
     {success && (
-        <div class="result-box success">
-          <h3>✅ Success!</h3>
-          <p><strong>Message:</strong> {message}</p>
-          {shops !== undefined && <p><strong>Shops found:</strong> {shops}</p>}
-          {firstShopName && <p><strong>First shop:</strong> {firstShopName}</p>}
+        <details style="margin-top: 1rem;">
+          <summary>View Full Server Response</summary>
+          <pre>{JSON.stringify(initialData.data, null, 2)}</pre>
+        </details>
+    )}
 
-          <details style="margin-top: 1rem;">
-            <summary>View Full Server Response</summary>
-            <pre>{JSON.stringify(data, null, 2)}</pre>
-          </details>
-        </div>
-      )}
-      </div>
+    {error && (
+        <p><small>Check your server console and make sure your .env file has PRINTIFY_API_TOKEN set.</small></p>
+    )}
+  </div>
 
-      <hr style="margin: 2rem 0;" />
+  <hr style="margin: 2rem 0;" />
 
-      <!-- This section allows for client-side testing directly from the browser -->
-      <h3>Manual Client-Side Test</h3>
-      <p>Click the button below to test the API by making a request from your browser.</p>
-      <button id="test-button">
-        🔄 Test API Now
-      </button>
+  <PrintifyTester client:load />
 
-      <div id="result" style="margin-top: 1rem;"></div>
-
-      <!--
-      This client-side script is processed in the browser.
-      It correctly calls the API route, which is designed to handle browser requests.
-      -->
-      <script>
-          async function testAPI() {
-            const resultDiv = document.getElementById('result');
-            const button = document.getElementById('test-button');
-
-            button.setAttribute('disabled', 'true');
-            resultDiv.innerHTML = '<div class="result-box loading">Loading...</div>';
-
-            try {
-              const response = await fetch('/api/test-printify');
-              const data = await response.json();
-
-              if (!response.ok || !data.success) {
-                throw new Error(data.error || 'The API returned an error.');
-              }
-
-              resultDiv.innerHTML = `
-          <div class="result-box success">
-            <h4>✅ API Test Successful!</h4>
-            <p><strong>Message:</strong> ${data.message}</p>
-            ${data.shops !== undefined ? `<p><strong>Shops:</strong> ${data.shops}</p>` : ''}
-            ${data.firstShopName ? `<p><strong>First Shop:</strong> ${data.firstShopName}</p>` : ''}
-          </div>
-        `;
-            } catch (err) {
-              resultDiv.innerHTML = `
-          <div class="result-box error">
-            <h4>❌ API Test Failed</h4>
-            <p>${err instanceof Error ? err.message : String(err)}</p>
-          </div>
-        `;
-            } finally {
-              button.removeAttribute('disabled');
-            }
-          }
-
-          document.getElementById('test-button').addEventListener('click', testAPI);
-          </script>
-
-      <!-- Some basic styling for the result boxes -->
-      <style>
-      .result-box {
-      padding: 1rem;
-        border-radius: 8px;
-      border: 2px solid transparent;
-    }
-    .result-box.success {
-    color: #166534;
-      background-color: #f0fdf4;
-      border-color: #4ade80;
-  }
-    .result-box.error {
-    color: #991b1b;
-      background-color: #fef2f2;
-      border-color: #f87171;
-  }
-    .result-box.loading {
-    color: #525252;
-      background-color: #f5f5f5;
-      border-color: #e5e5e5;
-  }
+  <style is:global>
     pre {
-    background: #f5f5f5;
-    padding: 1rem;
-    overflow: auto;
+      background: #f5f5f5;
+      padding: 1rem;
+      overflow: auto;
       border-radius: 4px;
       white-space: pre-wrap;
-  }
-    button {
-    background: #2563eb;
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border: none;
-      border-radius: 8px;
-    cursor: pointer;
-      font-size: 1rem;
-    transition: background-color 0.2s;
-  }
-    button:hover {
-    background: #1d4ed8;
-  }
-    button:disabled {
-    background: #9ca3af;
-    cursor: not-allowed;
-  }
-    </style>
+    }
+  </style>
 </Layout>
