@@ -3,16 +3,24 @@ import { getCollection, getEntry } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 
 // Get the slug from the URL
-export async function getStaticPaths() {
-  const products = await getCollection('products');
+const { slug } = Astro.params;
 
-  return products.map(product => ({
-    params: { slug: product.slug },
-    props: { product },
-  }));
+// In SSR mode, we need to fetch the specific product by slug
+let product;
+try {
+  // First try to get the product directly
+  const products = await getCollection('products');
+  product = products.find(p => p.slug === slug);
+
+  if (!product) {
+    return Astro.redirect('/404'); // Redirect to 404 if product not found
+  }
+} catch (error) {
+  console.error('Error fetching product:', error);
+  return Astro.redirect('/404');
 }
 
-const { product } = Astro.props;
+// Now we can safely destructure the product data
 const { title, description, imageSrc, price, category } = product.data;
 
 // Render the product's content
