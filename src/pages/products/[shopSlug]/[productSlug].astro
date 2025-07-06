@@ -1,12 +1,10 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
 import { getPrintifyData, getPrintifyProducts } from '../../../lib/printify';
+import { toSlug } from '../../../lib/utils';
 import ImageSlider from '../../../components/ImageSlider.vue';
 import ProductOptions from '../../../components/ProductOptions.vue';
 
-const toSlug = (str) => str.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-
-// This function runs once at build time to build ALL product pages
 export async function getStaticPaths() {
   console.log("Fetching all products to build static pages...");
   const shopsResponse = await getPrintifyData();
@@ -14,7 +12,6 @@ export async function getStaticPaths() {
 
   if (shopsResponse.success) {
     for (const shop of shopsResponse.data) {
-      // For a static site, we fetch all pages of products for each shop
       let currentPage = 1;
       let lastPage = 1;
       do {
@@ -26,7 +23,7 @@ export async function getStaticPaths() {
                 shopSlug: toSlug(shop.title),
                 productSlug: toSlug(product.title),
               },
-              props: { product }, // Pass the full product data as a prop
+              props: { product },
             });
           }
           lastPage = productsResponse.lastPage;

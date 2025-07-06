@@ -1,6 +1,6 @@
 ---
 import { getPrintifyData, getPrintifyProducts } from '../../lib/printify';
-import { toSlug } from '../../lib/utils'; // Import the helper
+import { toSlug } from '../../lib/utils';
 import Layout from '../../layouts/Layout.astro';
 import ProductCard from '../../components/ProductCard.vue';
 
@@ -20,13 +20,34 @@ const shopSlug = toSlug(shop.title);
 
 const productsResponse = await getPrintifyProducts(shop.id);
 const products = productsResponse.success ? productsResponse.products : [];
+
+const allTags = new Set<string>();
+if (products) {
+  products.forEach(product => {
+    product.tags.forEach(tag => allTags.add(tag));
+  });
+}
+const subCategories = Array.from(allTags);
 ---
 <Layout title={`Shop - ${categoryTitle}`}>
   <div class="category-header">
     <h1>{categoryTitle}</h1>
-    {products && <p>Browse {products.length} product(s)</p>}
   </div>
 
+  {subCategories.length > 0 && (
+      <div class="sub-category-nav">
+        <h3>Refine by Category</h3>
+        <div class="tags-container">
+          {subCategories.map(tag => (
+              <a href={`/category/${shopSlug}/${toSlug(tag)}`} class="tag">
+                {tag}
+              </a>
+          ))}
+        </div>
+      </div>
+  )}
+
+  <h2 class="all-products-title">All Products in {categoryTitle}</h2>
   {products.length === 0 && <p class="error-message">No products found in this category.</p>}
 
   <ul class="product-grid">
@@ -54,9 +75,42 @@ const products = productsResponse.success ? productsResponse.products : [];
   .category-header {
     text-align: center;
     padding: 2rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
     background-color: #f9f9f9;
     border-radius: 8px;
+  }
+  .sub-category-nav {
+    max-width: 1200px;
+    margin: 0 auto 2rem auto;
+    padding: 1.5rem;
+    background-color: #fff;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    text-align: center;
+  }
+  .tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+  .tag {
+    display: inline-block;
+    background-color: #f3f4f6;
+    color: #4b5563;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: background-color 0.2s;
+  }
+  .tag:hover {
+    background-color: #e5e7eb;
+  }
+  .all-products-title {
+    text-align: center;
+    margin-bottom: 2rem;
   }
   .product-grid {
     display: grid;
@@ -64,6 +118,8 @@ const products = productsResponse.success ? productsResponse.products : [];
     padding: 0 2rem 2rem;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
   }
   .error-message {
     text-align: center;

@@ -1,0 +1,107 @@
+---
+import { getPrintifyData, getPrintifyProducts } from '../../../lib/printify';
+import { toSlug } from '../../../lib/utils';
+import Layout from '../../../layouts/Layout.astro';
+import ProductCard from '../../../components/ProductCard.vue';
+
+export async function getStaticPaths() {
+    console.log("Building all sub-category (tag) pages...");
+    const shopsResponse = await getPrintifyData();
+    const allPaths = [];
+
+    if (shopsResponse.success) {
+        for (const shop of shopsResponse.data) {
+            let currentPage = 1;
+            let lastPage = 1;
+            const allProductsForShop = [];
+
+            // Fetch all pages of products for the shop first
+            do {
+                const productsResponse = await getPrintifyProducts(shop.id, currentPage);
+                if (productsResponse.success) {
+                    allProductsForShop.push(...productsResponse.products);
+                    lastPage = productsResponse.lastPage;
+                }
+                currentPage++;
+            } while (currentPage <= lastPage);
+
+            const uniqueTags = new Set<string>();
+            allProductsForShop.forEach(product => {
+                product.tags.forEach(tag => uniqueTags.add(tag));
+            });
+
+            for (const tag of uniqueTags) {
+                allPaths.push({
+                    params: {
+                        shopSlug: toSlug(shop.title),
+                        tagSlug: toSlug(tag),
+                    },
+                    props: {
+                        shop,
+                        tag,
+                        products: allProductsForShop.filter(p => p.tags.includes(tag))
+                    },
+                });
+            }
+        }
+    }
+
+    console.log(`Generated ${allPaths.length} sub-category pages.`);
+    return allPaths;
+}
+
+const { shop, tag, products } = Astro.props;
+const shopSlug = toSlug(shop.title);
+---
+<Layout title={`Shop - ${shop.title} - ${tag}`}>
+  <div class="category-header">
+    <h1>{shop.title}</h1>
+    <h2>{tag}</h2>
+    <p>Browse {products.length} product(s)</p>
+  </div>
+
+  <ul class="product-grid">
+      {products.map(product => {
+          const imageSrc = product.images.find(img => img.is_default)?.src || product.images[0]?.src;
+          const price = product.variants.find(v => v.is_enabled)?.price / 100;
+
+          return (
+              <li>
+                <ProductCard
+                    client:visible
+                    title={product.title}
+                    price={price}
+                    imageSrc={imageSrc}
+                    href={`/products/${shopSlug}/${toSlug(product.title)}`}
+                />
+              </li>
+          )
+      })}
+  </ul>
+</Layout>
+
+<style>
+    .category-header {
+        text-align: center;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+    }
+    .category-header h1 {
+        margin-bottom: 0.5rem;
+    }
+    .category-header h2 {
+        margin-top: 0;
+        color: #555;
+    }
+    .product-grid {
+        display: grid;
+        list-style: none;
+        padding: 0 2rem 2rem;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+</style>
