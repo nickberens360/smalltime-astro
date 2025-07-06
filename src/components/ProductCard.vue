@@ -1,13 +1,16 @@
 <template>
-  <div class="product-card">
-    <div class="product-image">
-      <img v-if="imageSrc" :src="imageSrc" :alt="title" />
+  <a :href="`/products/${slug}`" class="product-card-link">
+    <div class="product-card">
+      <div class="product-image">
+        <img v-if="imageSrc" :src="imageSrc" :alt="title" />
+      </div>
+      <div class="product-content">
+        <h3 class="product-title">{{ title }}</h3>
+        <p class="product-description">{{ description }}</p>
+        <p v-if="price" class="product-price">${{ price.toFixed(2) }}</p>
+      </div>
     </div>
-    <div class="product-content">
-      <h3 class="product-title">{{ title }}</h3>
-      <p class="product-description">{{ description }}</p>
-    </div>
-  </div>
+  </a>
 </template>
 
 <script>
@@ -25,12 +28,28 @@ export default {
     imageSrc: {
       type: String,
       required: true
+    },
+    slug: {
+      type: String,
+      required: true
+    },
+    price: {
+      type: Number,
+      required: false,
+      default: null
     }
   }
 }
 </script>
 
 <style scoped>
+.product-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  height: 100%;
+}
+
 .product-card {
   background-color: #fff;
   border-radius: 8px;
@@ -76,5 +95,13 @@ export default {
   font-size: 0.9rem;
   color: #666;
   line-height: 1.5;
+  margin-bottom: 0.75rem;
+}
+
+.product-price {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin-top: auto;
 }
 </style>
