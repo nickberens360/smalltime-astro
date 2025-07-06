@@ -1,38 +1,27 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
-import { getPrintifyData, getPrintifyProducts } from '../../../lib/printify';
+import { fetchAllPrintifyData } from '../../../lib/printify';
 import { toSlug } from '../../../lib/utils';
 import ImageSlider from '../../../components/ImageSlider.vue';
 import ProductOptions from '../../../components/ProductOptions.vue';
 
 export async function getStaticPaths() {
   console.log("Fetching all products to build static pages...");
-  const shopsResponse = await getPrintifyData();
+  const { shops, productsByShop } = await fetchAllPrintifyData();
   const allPaths = [];
 
-  if (shopsResponse.success) {
-    for (const shop of shopsResponse.data) {
-      let currentPage = 1;
-      let lastPage = 1;
-      do {
-        const productsResponse = await getPrintifyProducts(shop.id, currentPage);
-        if (productsResponse.success) {
-          for (const product of productsResponse.products) {
-            // Only create a page if the product is visible
-            if (product.visible) {
-              allPaths.push({
-                params: {
-                  shopSlug: toSlug(shop.title),
-                  productSlug: toSlug(product.title),
-                },
-                props: { product },
-              });
-            }
-          }
-          lastPage = productsResponse.lastPage;
-        }
-        currentPage++;
-      } while (currentPage <= lastPage);
+  for (const shop of shops) {
+    const products = productsByShop.get(shop.id) || [];
+    for (const product of products) {
+      if (product.visible) {
+        allPaths.push({
+          params: {
+            shopSlug: toSlug(shop.title),
+            productSlug: toSlug(product.title),
+          },
+          props: { product },
+        });
+      }
     }
   }
 

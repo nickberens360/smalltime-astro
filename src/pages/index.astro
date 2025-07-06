@@ -1,32 +1,26 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getPrintifyData, getPrintifyProducts } from '../lib/printify';
+import { fetchAllPrintifyData } from '../lib/printify';
 import { toSlug } from '../lib/utils';
 import HeroBanner from '../components/HeroBanner.vue';
 import ProductCard from '../components/ProductCard.vue';
 
-const shopsResponse = await getPrintifyData();
-const shops = shopsResponse.success ? shopsResponse.data : [];
+const { shops, productsByShop } = await fetchAllPrintifyData();
 
-const categoriesWithImages = await Promise.all(
-    shops.map(async (shop) => {
-      const productsResponse = await getPrintifyProducts(shop.id);
-      // Find the first product that is set to visible
-      const firstVisibleProduct = productsResponse.success
-          ? productsResponse.products.find(p => p.visible)
-          : null;
+const categoriesWithImages = shops.map(shop => {
+  const products = productsByShop.get(shop.id) || [];
+  const firstVisibleProduct = products.find(p => p.visible);
 
-      const imageUrl = firstVisibleProduct
-          ? firstVisibleProduct.images.find(img => img.is_default)?.src || firstVisibleProduct.images[0]?.src
-          : '/src/assets/placeholder.png'; // Fallback image
+  const imageUrl = firstVisibleProduct
+      ? firstVisibleProduct.images.find(img => img.is_default)?.src || firstVisibleProduct.images[0]?.src
+      : '/src/assets/placeholder.png';
 
-      return {
-        title: shop.title,
-        slug: toSlug(shop.title),
-        imageSrc: imageUrl
-      };
-    })
-);
+  return {
+    title: shop.title,
+    slug: toSlug(shop.title),
+    imageSrc: imageUrl
+  };
+});
 ---
 
 <Layout title="Smalltime - Welcome to the Shop">

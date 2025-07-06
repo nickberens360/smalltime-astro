@@ -1,48 +1,35 @@
 ---
-import { getPrintifyData, getPrintifyProducts } from '../../../lib/printify';
+import { fetchAllPrintifyData } from '../../../lib/printify';
 import { toSlug } from '../../../lib/utils';
 import Layout from '../../../layouts/Layout.astro';
 import ProductCard from '../../../components/ProductCard.vue';
 
 export async function getStaticPaths() {
   console.log("Building all sub-category (tag) pages...");
-  const shopsResponse = await getPrintifyData();
+  const { shops, productsByShop } = await fetchAllPrintifyData();
   const allPaths = [];
 
-  if (shopsResponse.success) {
-    for (const shop of shopsResponse.data) {
-      let currentPage = 1;
-      let lastPage = 1;
-      const allProductsForShop = [];
+  for (const shop of shops) {
+    const allProductsForShop = productsByShop.get(shop.id) || [];
+    const visibleProducts = allProductsForShop.filter(p => p.visible);
 
-      do {
-        const productsResponse = await getPrintifyProducts(shop.id, currentPage);
-        if (productsResponse.success) {
-          // Filter for visible products before processing
-          allProductsForShop.push(...productsResponse.products.filter(p => p.visible));
-          lastPage = productsResponse.lastPage;
-        }
-        currentPage++;
-      } while (currentPage <= lastPage);
+    const uniqueTags = new Set<string>();
+    visibleProducts.forEach(product => {
+      product.tags.forEach(tag => uniqueTags.add(tag));
+    });
 
-      const uniqueTags = new Set<string>();
-      allProductsForShop.forEach(product => {
-        product.tags.forEach(tag => uniqueTags.add(tag));
+    for (const tag of uniqueTags) {
+      allPaths.push({
+        params: {
+          shopSlug: toSlug(shop.title),
+          tagSlug: toSlug(tag),
+        },
+        props: {
+          shop,
+          tag,
+          products: visibleProducts.filter(p => p.tags.includes(tag))
+        },
       });
-
-      for (const tag of uniqueTags) {
-        allPaths.push({
-          params: {
-            shopSlug: toSlug(shop.title),
-            tagSlug: toSlug(tag),
-          },
-          props: {
-            shop,
-            tag,
-            products: allProductsForShop.filter(p => p.tags.includes(tag))
-          },
-        });
-      }
     }
   }
 

@@ -1,13 +1,11 @@
 ---
-import { getPrintifyData, getPrintifyProducts } from '../../lib/printify';
+import { fetchAllPrintifyData } from '../../lib/printify';
 import { toSlug } from '../../lib/utils';
 import Layout from '../../layouts/Layout.astro';
 import ProductCard from '../../components/ProductCard.vue';
 
 export async function getStaticPaths() {
-  const shopsResponse = await getPrintifyData();
-  const shops = shopsResponse.success ? shopsResponse.data : [];
-
+  const { shops } = await fetchAllPrintifyData();
   return shops.map((shop) => ({
     params: { slug: toSlug(shop.title) },
     props: { shop },
@@ -15,16 +13,14 @@ export async function getStaticPaths() {
 }
 
 const { shop } = Astro.props;
+const { productsByShop } = await fetchAllPrintifyData();
+
 const categoryTitle = shop.title;
 const shopSlug = toSlug(shop.title);
 
-const productsResponse = await getPrintifyProducts(shop.id);
-// Filter for visible products only
-const visibleProducts = productsResponse.success
-    ? productsResponse.products.filter(p => p.visible)
-    : [];
+const allProducts = productsByShop.get(shop.id) || [];
+const visibleProducts = allProducts.filter(p => p.visible);
 
-// Generate sub-categories (tags) only from visible products
 const allTags = new Set<string>();
 visibleProducts.forEach(product => {
   product.tags.forEach(tag => allTags.add(tag));
