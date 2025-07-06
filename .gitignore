@@ -24,3 +24,6 @@ pnpm-debug.log*
 .idea/
 
 *.BAK
+
+# Local Netlify folder
+.netlify

@@ -1,0 +1,81 @@
+---
+import { getPrintifyData, getPrintifyProducts } from '../../lib/printify';
+import Layout from '../../layouts/Layout.astro';
+import ProductCard from '../../components/ProductCard.vue';
+
+const { slug: shopSlug } = Astro.params;
+
+const shopsResponse = await getPrintifyData();
+let shopId = null;
+let categoryTitle = 'Category';
+let products = [];
+let error = null;
+
+const toSlug = (str) => str.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+
+if (shopsResponse.success) {
+  const currentShop = shopsResponse.data.find(shop => toSlug(shop.title) === shopSlug);
+
+  if (currentShop) {
+    shopId = currentShop.id;
+    categoryTitle = currentShop.title;
+    const productsResponse = await getPrintifyProducts(shopId);
+    if (productsResponse.success) {
+      products = productsResponse.products;
+    } else {
+      error = productsResponse.error;
+    }
+  } else {
+    error = `Category "${shopSlug}" not found.`;
+  }
+} else {
+  error = shopsResponse.error;
+}
+---
+<Layout title={`Shop - ${categoryTitle}`}>
+  <div class="category-header">
+    <h1>{categoryTitle}</h1>
+    {products && <p>Browse {products.length} product(s)</p>}
+  </div>
+
+  {error && <p class="error-message">{error}</p>}
+
+  <div class="product-grid">
+    {products && products.map(product => {
+      const imageSrc = product.images.find(img => img.is_default)?.src || product.images[0]?.src;
+      const price = product.variants.find(v => v.is_enabled)?.price / 100;
+      const productSlug = toSlug(product.title);
+
+      return (
+          <ProductCard
+              client:visible
+              title={product.title}
+              price={price}
+              imageSrc={imageSrc}
+              href={`/products/${shopSlug}/${productSlug}`}
+          />
+      )
+    })}
+  </div>
+</Layout>
+
+<style>
+  .category-header {
+    text-align: center;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+  }
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    padding: 0 2rem 2rem;
+  }
+  .error-message {
+    text-align: center;
+    color: red;
+    padding: 2rem;
+  }
+</style>

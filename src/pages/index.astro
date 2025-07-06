@@ -1,139 +1,86 @@
 ---
+import Layout from '../layouts/Layout.astro';
+import { getPrintifyData, getPrintifyProducts } from '../lib/printify';
 import HeroBanner from '../components/HeroBanner.vue';
 import ProductCard from '../components/ProductCard.vue';
-import Layout from '../layouts/Layout.astro';
-import { getCollection } from 'astro:content';
 
-// Fetch all products from the collection
-const products = await getCollection('products');
+const toSlug = (str) => str.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
-// Define categories
-const categories = [
-  { name: 'Stickers', url: '/stickers' },
-  { name: 'T-Shirts', url: '/t-shirts' },
-  { name: 'Sweatshirts', url: '/sweatshirt' },
-  { name: 'Mugs', url: '/mugs' },
-  { name: 'Accessories', url: '/accessories' }
-];
+const shopsResponse = await getPrintifyData();
+const shops = shopsResponse.success ? shopsResponse.data : [];
+
+const categoriesWithImages = await Promise.all(
+    shops.map(async (shop) => {
+        const productsResponse = await getPrintifyProducts(shop.id);
+        const firstProduct = productsResponse.success && productsResponse.products.length > 0
+            ? productsResponse.products[0]
+            : null;
+
+        const imageUrl = firstProduct
+            ? firstProduct.images.find(img => img.is_default)?.src || firstProduct.images[0]?.src
+            : '/src/assets/placeholder.png';
+
+        return {
+            title: shop.title,
+            slug: toSlug(shop.title),
+            imageSrc: imageUrl
+        };
+    })
+);
 ---
 
-<Layout title="My Astro Site" description="Welcome to my Astro site">
-    <HeroBanner
-      title="Smalltime Intelligent Streetware"
-      description="Making poor decisions since 1996"
+<Layout title="Smalltime - Welcome to the Shop">
+  <HeroBanner
+      client:load
+      title="Welcome to Smalltime"
+      description="Unique designs on quality products. Find your new favorite thing."
+      buttonText="Explore All Products"
       imageSrc="/src/assets/st-script.png"
-    />
+      backgroundColor="#f0fdf4"
+  />
 
-    <section class="categories-section">
-      <h2>Shop by Category</h2>
-      <div class="categories-grid">
-        {categories.map(category => (
-          <a href={category.url} class="category-card">
-            <h3>{category.name}</h3>
-          </a>
-        ))}
-      </div>
-    </section>
-
-    <section class="products-section">
-      <h2>Featured Products</h2>
-      <div class="product-grid">
-        {products.slice(0, 4).map(product => (
-          <ProductCard
-            title={product.data.title}
-            description={product.data.description}
-            imageSrc={product.data.imageSrc}
-            slug={product.slug}
-            price={product.data.price}
-          />
-        ))}
-      </div>
-    </section>
-
-    <section>
-      <h2>Our Services</h2>
-      <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a diam lectus. Sed sit amet ipsum mauris. Maecenas congue ligula
-        ac quam viverra nec consectetur ante hendrerit. Donec et mollis dolor. Praesent et diam eget libero egestas mattis sit amet vitae augue.
-        Nam tincidunt congue enim, ut porta lorem lacinia consectetur. Donec ut libero sed arcu vehicula ultricies a non tortor.
-      </p>
-      <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean ut gravida lorem. Ut turpis felis, pulvinar a semper sed, adipiscing
-        id dolor. Pellentesque auctor nisi id magna consequat sagittis. Curabitur dapibus enim sit amet elit pharetra tincidunt feugiat nisl imperdiet.
-      </p>
-    </section>
+  <div class="category-grid-container">
+    <h2>Shop by Category</h2>
+      {categoriesWithImages.length > 0 ? (
+          <ul class="product-grid">
+              {categoriesWithImages.map(category => (
+                  <li>
+                    <ProductCard
+                        client:visible
+                        title={category.title}
+                        imageSrc={category.imageSrc}
+                        href={`/category/${category.slug}`}
+                    />
+                  </li>
+              ))}
+          </ul>
+      ) : (
+          <p class="error-message">
+            Could not load categories at this time.
+          </p>
+      )}
+  </div>
 </Layout>
 
 <style>
-  section {
-    padding: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  h2 {
-    margin-bottom: 1.5rem;
-    font-size: 2rem;
-    text-align: center;
-  }
-
-  .categories-section {
-    margin-bottom: 2rem;
-  }
-
-  .categories-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1.5rem;
-  }
-
-  .category-card {
-    background-color: #f5f5f5;
-    border-radius: 8px;
-    padding: 2rem;
-    text-align: center;
-    text-decoration: none;
-    color: #333;
-    transition: transform 0.3s, background-color 0.3s;
-  }
-
-  .category-card:hover {
-    transform: translateY(-5px);
-    background-color: #e0e0e0;
-  }
-
-  .category-card h3 {
-    margin: 0;
-    font-size: 1.25rem;
-  }
-
-  .products-section {
-    margin-bottom: 2rem;
-  }
-
-  .product-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 2rem;
-  }
-
-  @media (min-width: 768px) {
-    .categories-grid {
-      grid-template-columns: repeat(3, 1fr);
+    .category-grid-container {
+        max-width: 1200px;
+        margin: 3rem auto;
+        padding: 0 2rem;
+        text-align: center;
     }
-
     .product-grid {
-      grid-template-columns: repeat(2, 1fr);
+        list-style: none;
+        padding: 0;
+        margin-top: 2rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
     }
-  }
-
-  @media (min-width: 1024px) {
-    .categories-grid {
-      grid-template-columns: repeat(5, 1fr);
+    .error-message {
+        color: #991b1b;
+        background-color: #fef2f2;
+        padding: 1rem;
+        border-radius: 8px;
     }
-
-    .product-grid {
-      grid-template-columns: repeat(4, 1fr);
-    }
-  }
 </style>

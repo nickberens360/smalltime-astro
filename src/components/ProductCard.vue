@@ -1,12 +1,12 @@
 <template>
-  <a :href="`/products/${slug}`" class="product-card-link">
+  <a :href="href" class="product-card-link">
     <div class="product-card">
       <div class="product-image">
         <img v-if="imageSrc" :src="imageSrc" :alt="title" />
       </div>
       <div class="product-content">
         <h3 class="product-title">{{ title }}</h3>
-        <p class="product-description">{{ description }}</p>
+        <div v-if="description" class="product-description" v-html="description"></div>
         <p v-if="price" class="product-price">${{ price.toFixed(2) }}</p>
       </div>
     </div>
@@ -23,13 +23,14 @@ export default {
     },
     description: {
       type: String,
-      required: true
+      required: false, // Description is now optional
+      default: ''
     },
     imageSrc: {
       type: String,
       required: true
     },
-    slug: {
+    href: {
       type: String,
       required: true
     },
@@ -96,6 +97,10 @@ export default {
   color: #666;
   line-height: 1.5;
   margin-bottom: 0.75rem;
+}
+
+.product-description :global(p) {
+  margin: 0;
 }
 
 .product-price {
