@@ -2,12 +2,10 @@ import type { APIRoute } from 'astro';
 import { fetchAllPrintifyData } from '../../lib/printify';
 import { toSlug } from '../../lib/utils';
 
-// This ensures the route is rendered on-demand
 export const prerender = false;
 
 export const GET: APIRoute = async () => {
     try {
-        // We use our cached data fetcher for efficiency
         const { shops, productsByShop } = await fetchAllPrintifyData();
 
         const navigationData = shops.map(shop => {
@@ -28,13 +26,16 @@ export const GET: APIRoute = async () => {
                 }))
             };
         })
-            // We only want to show shops that have tagged products to create sub-menus
             .filter(shop => shop.tags.length > 0);
 
         return new Response(JSON.stringify({ success: true, data: navigationData }), { status: 200 });
 
     } catch (e) {
-        const error = e instanceof Error ? e.message : 'An unknown error occurred';
+        // Log the detailed error to your Netlify function logs
+        console.error("Error in /api/navigation:", e);
+
+        // Return a specific error message as a JSON response
+        const error = e instanceof Error ? e.message : 'An unknown error occurred in the navigation API.';
         return new Response(JSON.stringify({ success: false, error }), { status: 500 });
     }
 };
