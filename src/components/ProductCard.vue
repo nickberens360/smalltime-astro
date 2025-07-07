@@ -23,7 +23,7 @@ export default {
     },
     description: {
       type: String,
-      required: false, // Description is now optional
+      required: false,
       default: ''
     },
     imageSrc: {
@@ -52,11 +52,11 @@ export default {
 }
 
 .product-card {
-  background-color: #fff;
+  background-color: var(--card-background);
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--card-shadow);
   overflow: hidden;
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -64,7 +64,7 @@ export default {
 
 .product-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--card-hover-shadow);
 }
 
 .product-image {
@@ -94,7 +94,7 @@ export default {
 
 .product-description {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--product-description-color);
   line-height: 1.5;
   margin-bottom: 0.75rem;
 }
@@ -106,7 +106,7 @@ export default {
 .product-price {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-color);
   margin-top: auto;
 }
 </style>

@@ -16,7 +16,8 @@
 </template>
 
 <script>
-import stScript from '../assets/st-script.png';
+import { computed } from 'vue';
+import { useThemeStore } from '../stores/theme';
 
 export default {
   name: 'HeroBanner',
@@ -38,22 +39,34 @@ export default {
     },
     backgroundColor: {
       type: String,
-      default: 'transparent', // Default to transparent if not provided
+      default: 'transparent',
     },
     imageSrc: {
-      // Allow both String (for URLs) and Object (for imported images)
       type: [String, Object],
-      default: () => stScript
+      default: null
     }
   },
-  computed: {
-    // This computed property handles both cases
-    finalImageSrc() {
-      if (typeof this.imageSrc === 'object' && this.imageSrc.src) {
-        return this.imageSrc.src; // Use the 'src' property from the imported image object
+  setup(props) { // Corrected: Added 'props' as an argument here
+    const themeStore = useThemeStore();
+
+    const finalImageSrc = computed(() => {
+      // This will now work correctly
+      if (props.imageSrc) {
+        if (typeof props.imageSrc === 'object' && props.imageSrc.src) {
+          return props.imageSrc.src;
+        }
+        return props.imageSrc;
       }
-      return this.imageSrc; // Assume it's a string URL
-    }
+      return themeStore.isDarkMode ? '/images/st-script-light.png' : '/images/st-script.png';
+    });
+
+    return {
+      themeStore,
+      finalImageSrc,
+    };
+  },
+  mounted() {
+    this.themeStore.initTheme();
   }
 }
 </script>
@@ -65,7 +78,6 @@ export default {
   border-radius: 8px;
   margin-bottom: 2rem;
 }
-
 .hero-content {
   max-width: 800px;
   margin: 0 auto;
@@ -73,30 +85,24 @@ export default {
   flex-direction: column;
   align-items: center;
 }
-
 .hero-image {
   margin-bottom: 1rem;
   max-width: 100%;
 }
-
 .hero-image img {
   max-width: 100%;
 }
-
 .hero-text {
   width: 100%;
 }
-
 h1 {
   font-size: 2.5rem;
   margin-bottom: 1rem;
 }
-
 p {
   font-size: 1.2rem;
   margin-bottom: 2rem;
 }
-
 .cta-button {
   background-color: white;
   color: #3498db;
@@ -108,7 +114,6 @@ p {
   cursor: pointer;
   transition: background-color 0.3s, transform 0.2s;
 }
-
 .cta-button:hover {
   background-color: #f8f9fa;
   transform: translateY(-2px);

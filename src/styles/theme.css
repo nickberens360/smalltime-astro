@@ -1,0 +1,39 @@
+:root {
+    --background-color: #fff;
+    --text-color: #333;
+    --card-background: #fff;
+    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --card-hover-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    --product-description-color: #666;
+    --header-background: #fff;
+    --header-border: #e5e7eb;
+    --link-color: #374151;
+    --link-hover-color: #111827;
+    --link-hover-background: #f3f4f6;
+    --button-primary-background: #2563eb;
+    --button-primary-hover-background: #1d4ed8;
+    --button-disabled-background: #9ca3af;
+}
+
+[data-theme='dark'] {
+    --background-color: #121212;
+    --text-color: #e0e0e0;
+    --card-background: #1e1e1e;
+    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+    --card-hover-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+    --product-description-color: #a0a0a0;
+    --header-background: #1e1e1e;
+    --header-border: #333;
+    --link-color: #e0e0e0;
+    --link-hover-color: #fff;
+    --link-hover-background: #333;
+    --button-primary-background: #3b82f6;
+    --button-primary-hover-background: #2563eb;
+    --button-disabled-background: #4b5563;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}

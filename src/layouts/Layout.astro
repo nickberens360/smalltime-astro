@@ -1,7 +1,12 @@
 ---
+// src/layouts/Layout.astro
+import '../styles/theme.css'; // Add this line
 import SiteHeader from '../components/SiteHeader.vue';
 import CartDrawer from '../components/CartDrawer.vue';
+
+const { title } = Astro.props;
 ---
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -10,27 +15,13 @@ import CartDrawer from '../components/CartDrawer.vue';
   <meta name="viewport" content="width=device-width" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta name="generator" content={Astro.generator} />
-  <title>{Astro.props.title}</title>
+  <title>{title}</title>
 </head>
 <body>
 <SiteHeader client:load />
-
 <main>
   <slot />
 </main>
-
 <CartDrawer client:load />
-
-<style is:global>
-  body {
-    font-family: system-ui, sans-serif;
-    margin: 0;
-    background-color: #f9fafb;
-  }
-  /* This class will be toggled by the SiteHeader component */
-  body.no-scroll {
-    overflow: hidden;
-  }
-</style>
 </body>
 </html>

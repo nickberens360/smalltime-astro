@@ -2,7 +2,7 @@
   <header class="site-header">
     <div class="header-container">
       <a href="/" class="logo">
-        <img src="/images/st-script.png" alt="Smalltime Logo" />
+        <img :src="logoSrc" alt="Smalltime Logo" />
       </a>
 
       <nav class="main-nav desktop-only">
@@ -26,6 +26,9 @@
 
       <div class="header-actions">
         <CartIndicator />
+        <button @click="themeStore.toggleTheme" class="theme-toggle-button" aria-label="Toggle theme">
+          🌓
+        </button>
         <button @click="toggleMobileMenu" class="mobile-nav-toggle mobile-only" aria-label="Toggle navigation menu">
           <svg v-if="!isMobileMenuOpen" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12h18M3 6h18M3 18h18"/></svg>
           <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 6L6 18M6 6l12 12"/></svg>
@@ -61,11 +64,25 @@
 </template>
 
 <script>
+import { computed } from 'vue';
 import CartIndicator from './CartIndicator.vue';
+import { useThemeStore } from '../stores/theme';
 
 export default {
   components: {
     CartIndicator
+  },
+  setup() {
+    const themeStore = useThemeStore();
+
+    const logoSrc = computed(() => {
+      return themeStore.isDarkMode ? '/images/st-script-light.png' : '/images/st-script.png';
+    });
+
+    return {
+      themeStore,
+      logoSrc
+    };
   },
   data() {
     return {
@@ -90,15 +107,16 @@ export default {
   watch: {
     isMobileMenuOpen(newVal) {
       if (typeof window !== 'undefined' && window.document) {
-        if (newVal) {
-          document.body.classList.add('no-scroll');
-        } else {
-          document.body.classList.remove('no-scroll');
-        }
+        document.body.classList.toggle('no-scroll', newVal);
       }
     }
   },
   async mounted() {
+    // Initialize the theme here, AFTER the component has mounted on the client.
+    // This prevents a hydration mismatch between the server-rendered HTML
+    // and the client-side Vue app.
+    this.themeStore.initTheme();
+
     window.addEventListener('resize', this.handleResize);
     try {
       const response = await fetch('/api/navigation');
@@ -118,14 +136,15 @@ export default {
 </script>
 
 <style scoped>
-/* --- Base Header Styles (Unchanged) --- */
+/* --- Base Header Styles (Updated with CSS Variables) --- */
 .site-header {
-  background-color: #fff;
-  border-bottom: 1px solid #e5e7eb;
+  background-color: var(--header-background);
+  border-bottom: 1px solid var(--header-border);
   padding: 0 2rem;
   position: sticky;
   top: 0;
   z-index: 50;
+  transition: background-color 0.3s, border-color 0.3s;
 }
 .header-container {
   display: flex;
@@ -144,7 +163,7 @@ export default {
   width: auto;
 }
 
-/* --- Desktop Nav (Unchanged) --- */
+/* --- Desktop Nav (Updated with CSS Variables) --- */
 .main-nav { display: none; }
 @media (min-width: 768px) {
   .main-nav { display: flex; }
@@ -161,21 +180,21 @@ export default {
   display: block;
   padding: 1rem;
   text-decoration: none;
-  color: #374151;
+  color: var(--link-color);
   font-weight: 500;
-  transition: color 0.2s;
+  transition: color 0.2s, background-color 0.2s;
   border-radius: 6px;
 }
 .nav-item > a:hover {
-  color: #111827;
-  background-color: #f3f4f6;
+  color: var(--link-hover-color);
+  background-color: var(--link-hover-background);
 }
 .dropdown-menu {
   position: absolute;
   top: 95%;
   left: 0;
-  background-color: white;
-  border: 1px solid #e5e7eb;
+  background-color: var(--card-background);
+  border: 1px solid var(--header-border);
   border-radius: 8px;
   box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
   padding: 0.5rem;
@@ -183,7 +202,7 @@ export default {
   opacity: 0;
   transform: translateY(10px);
   visibility: hidden;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.3s, border-color 0.3s;
   z-index: 10;
 }
 .nav-item:hover .dropdown-menu {
@@ -196,21 +215,34 @@ export default {
   display: block;
   padding: 0.75rem 1rem;
   text-decoration: none;
-  color: #374151;
+  color: var(--link-color);
   border-radius: 4px;
   white-space: nowrap;
 }
 .dropdown-menu li a:hover {
-  background-color: #f3f4f6;
-  color: #111827;
+  background-color: var(--link-hover-background);
+  color: var(--link-hover-color);
 }
 
-/* --- Header Actions (Unchanged) --- */
+/* --- Header Actions --- */
 .header-actions {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
+
+.theme-toggle-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: var(--text-color)
+}
+
 .mobile-nav-toggle {
   background: none;
   border: none;
@@ -219,27 +251,28 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--text-color)
 }
 @media (min-width: 768px) {
   .mobile-only { display: none; }
 }
 
-/* --- NEW / UPDATED Mobile Menu Styles --- */
+/* --- Mobile Menu Styles (Updated with CSS Variables) --- */
 .mobile-nav-menu {
   position: fixed;
   top: 65px;
   left: 0;
   width: 100%;
   height: calc(100vh - 65px);
-  background-color: #f9fafb; /* Lighter background for the whole menu */
+  background-color: var(--background-color);
   z-index: 99;
-  padding: 0.5rem 0; /* Vertical padding */
+  padding: 0.5rem 0;
   box-sizing: border-box;
   overflow-y: auto;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--header-border);
+  transition: background-color 0.3s, border-color 0.3s;
 }
 
-/* Main mobile menu container transition */
 .slide-fade-enter-active,
 .slide-fade-leave-active {
   transition: all 0.3s ease-out;
@@ -270,19 +303,19 @@ export default {
   text-align: left;
   font-size: 1.125rem; /* 18px */
   font-weight: 500;
-  color: #1f2937;
+  color: var(--link-color);
   padding: 1rem 1.5rem;
   cursor: pointer;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--header-border);
   transition: background-color 0.2s;
 }
 .mobile-nav-top-level:hover {
-  background-color: #f3f4f6;
+  background-color: var(--link-hover-background);
 }
 
 .submenu-arrow {
   display: inline-block;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, color 0.3s;
   font-size: 1.75rem; /* Larger for easier tapping */
   line-height: 1;
   color: #9ca3af;
@@ -290,7 +323,7 @@ export default {
 
 .submenu-arrow.is-open {
   transform: rotate(90deg);
-  color: #1f2937; /* Darken arrow when open */
+  color: var(--link-hover-color); /* Darken arrow when open */
 }
 
 /* Submenu animation */
@@ -311,26 +344,27 @@ export default {
   list-style: none;
   padding: 0.5rem 0;
   margin: 0;
-  background-color: #fff; /* White background to stand out from the gray */
-  border-bottom: 1px solid #e5e7eb;
+  background-color: var(--card-background); /* White background to stand out from the gray */
+  border-bottom: 1px solid var(--header-border);
 }
+
 
 .mobile-submenu li a {
   display: block;
   font-size: 1rem;
-  color: #374151;
+  color: var(--link-color);
   text-decoration: none;
   padding: 0.875rem 2.5rem; /* 14px 40px - for deep indent */
 }
 
 .mobile-submenu li a:hover {
-  color: #111827;
-  background-color: #f3f4f6;
+  color: var(--link-hover-color);
+  background-color: var(--link-hover-background);
 }
 
 /* Style for the 'All' link to make it stand out */
 .mobile-submenu li:first-child a {
-  color: #111827;
+  color: var(--link-hover-color);
   font-weight: 500;
 }
 </style>
