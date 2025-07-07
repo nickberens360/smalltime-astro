@@ -5,8 +5,14 @@ import { toSlug } from '../../lib/utils';
 export const prerender = false;
 
 export const GET: APIRoute = async () => {
+    console.log("Attempting to fetch navigation data...");
     try {
+        // Explicitly log the environment variable to check if it's available
+        const apiKeyExists = !!import.meta.env.PRINTIFY_API_TOKEN;
+        console.log(`Printify API Token Exists: ${apiKeyExists}`);
+
         const { shops, productsByShop } = await fetchAllPrintifyData();
+        console.log("Successfully fetched data from Printify.");
 
         const navigationData = shops.map(shop => {
             const products = productsByShop.get(shop.id) || [];
@@ -28,6 +34,7 @@ export const GET: APIRoute = async () => {
         })
             .filter(shop => shop.tags.length > 0);
 
+        console.log("Successfully generated navigation data.");
         return new Response(JSON.stringify({ success: true, data: navigationData }), { status: 200 });
 
     } catch (e) {
