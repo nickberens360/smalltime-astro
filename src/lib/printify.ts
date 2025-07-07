@@ -1,6 +1,6 @@
-// src/lib/printify.ts
-
 import { toSlug } from "./utils";
+// Import the list of shop IDs from our new config file
+import { SHOPS_TO_INCLUDE } from '../config/shops.config';
 
 const API_KEY = import.meta.env.PRINTIFY_API_TOKEN;
 const API_URL = 'https://api.printify.com/v1';
@@ -20,10 +20,13 @@ export async function fetchAllPrintifyData() {
         return { shops: [], productsByShop: new Map() };
     }
 
-    const shops = shopsResponse.data;
+    // Filter the shops to only include those specified in the config file
+    const allowedShops = shopsResponse.data.filter(shop => SHOPS_TO_INCLUDE.includes(shop.id));
+    console.log(`Found ${allowedShops.length} allowed shops to process based on your config.`);
+
     const productsByShop = new Map();
 
-    for (const shop of shops) {
+    for (const shop of allowedShops) {
         let currentPage = 1;
         let lastPage = 1;
         const allProductsForShop = [];
@@ -43,7 +46,8 @@ export async function fetchAllPrintifyData() {
 
     console.log("--- Printify data fetch complete ---");
 
-    allDataCache = { shops, productsByShop };
+    // The cache will now only contain data for the allowed shops
+    allDataCache = { shops: allowedShops, productsByShop };
     return allDataCache;
 }
 
@@ -91,7 +95,6 @@ export async function getPrintifyProducts(shopId: string | number, page: number 
     }
 }
 
-// Re-exporting this function so our API route can use it
 export async function getPrintifyProduct(shopId: string | number, productId: string) {
     try {
         if (!API_KEY) throw new Error("Printify API token is not configured.");

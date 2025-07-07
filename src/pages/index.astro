@@ -1,38 +1,32 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getPrintifyData, getPrintifyProducts } from '../lib/printify';
+import { fetchAllPrintifyData } from '../lib/printify';
 import { toSlug } from '../lib/utils';
 import HeroBanner from '../components/HeroBanner.vue';
 import ProductCard from '../components/ProductCard.vue';
 
-const shopsResponse = await getPrintifyData();
-const shops = shopsResponse.success ? shopsResponse.data : [];
+// Use the centralized, cached, and filtered data-fetching function
+const { shops, productsByShop } = await fetchAllPrintifyData();
 
-const categoriesWithData = await Promise.all(
-    shops.map(async (shop) => {
-      const productsResponse = await getPrintifyProducts(shop.id);
-      const visibleProducts = productsResponse.success
-          ? productsResponse.products.filter(p => p.visible)
-          : [];
+const categoriesWithImages = shops.map(shop => {
+  const products = productsByShop.get(shop.id) || [];
+  // Find the first product that is set to visible to use for the thumbnail
+  const firstVisibleProduct = products.find(p => p.visible);
 
-      const firstVisibleProduct = visibleProducts.length > 0 ? visibleProducts[0] : null;
+  const imageUrl = firstVisibleProduct
+      ? firstVisibleProduct.images.find(img => img.is_default)?.src || firstVisibleProduct.images[0]?.src
+      : '/src/assets/placeholder.png'; // Fallback image
 
-      const imageUrl = firstVisibleProduct
-          ? firstVisibleProduct.images.find(img => img.is_default)?.src || firstVisibleProduct.images[0]?.src
-          : '/src/assets/placeholder.png';
-
-      return {
-        title: shop.title,
-        slug: toSlug(shop.title),
-        imageSrc: imageUrl,
-        // Add a count of visible products to use for filtering
-        productCount: visibleProducts.length
-      };
-    })
-);
-
-// Only include categories that have one or more visible products
-const visibleCategories = categoriesWithData.filter(category => category.productCount > 0);
+  return {
+    title: shop.title,
+    slug: toSlug(shop.title),
+    imageSrc: imageUrl,
+    // We can also use the count of visible products if needed elsewhere
+    productCount: products.filter(p => p.visible).length
+  };
+})
+    // Ensure we don't show a category link if it has no visible products
+    .filter(category => category.productCount > 0);
 ---
 
 <Layout title="Smalltime - Welcome to the Shop">
@@ -41,13 +35,14 @@ const visibleCategories = categoriesWithData.filter(category => category.product
       title="Welcome to Smalltime"
       description="Unique designs on quality products. Find your new favorite thing."
       buttonText="Explore All Products"
+      imageSrc="/src/assets/st-script.png"
   />
 
   <div class="category-grid-container">
     <h2>Shop by Category</h2>
-    {visibleCategories.length > 0 ? (
+    {categoriesWithImages.length > 0 ? (
         <ul class="product-grid">
-          {visibleCategories.map(category => (
+          {categoriesWithImages.map(category => (
               <li>
                 <ProductCard
                     client:visible
@@ -60,7 +55,7 @@ const visibleCategories = categoriesWithData.filter(category => category.product
         </ul>
     ) : (
         <p class="error-message">
-          No product categories are available at this time.
+          No product categories with visible products are available at this time.
         </p>
     )}
   </div>
