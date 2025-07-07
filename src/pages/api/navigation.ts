@@ -5,7 +5,7 @@ import { toSlug } from '../../lib/utils';
 export const prerender = false;
 
 export const GET: APIRoute = async () => {
-    console.log("Attempting to fetch navigation data...");
+     console.log("Attempting to fetch navigation data...");
     try {
         // Explicitly log the environment variable to check if it's available
         const apiKeyExists = !!import.meta.env.PRINTIFY_API_TOKEN;
