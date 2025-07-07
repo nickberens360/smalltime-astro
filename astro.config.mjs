@@ -1,13 +1,13 @@
 import { defineConfig } from 'astro/config';
 import vue from '@astrojs/vue';
-
-// The netlify adapter is no longer needed for a static site
-// import netlify from '@astrojs/netlify';
+// Re-import the netlify adapter
+import netlify from '@astrojs/netlify';
 
 // https://astro.build/config
 export default defineConfig({
   integrations: [vue()],
-  // Change output from 'server' to 'static'
-  output: 'static',
-  // The adapter is removed
+  // Change output from 'static' to 'hybrid' to support both static pages and server routes
+  output: 'hybrid',
+  // Re-add the Netlify adapter
+  adapter: netlify(),
 });
