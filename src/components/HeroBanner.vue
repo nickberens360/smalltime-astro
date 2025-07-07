@@ -3,7 +3,7 @@
     <div class="hero-content">
       <div class="hero-image">
         <slot name="image">
-          <img v-if="imageSrc" :src="imageSrc" alt="Hero image" />
+          <img v-if="finalImageSrc" :src="finalImageSrc" alt="Hero image" />
         </slot>
       </div>
       <div class="hero-text">
@@ -16,6 +16,8 @@
 </template>
 
 <script>
+import stScript from '../assets/st-script.png';
+
 export default {
   name: 'HeroBanner',
   props: {
@@ -36,11 +38,21 @@ export default {
     },
     backgroundColor: {
       type: String,
-      default: '#fff'
+      default: 'transparent', // Default to transparent if not provided
     },
     imageSrc: {
-      type: String,
-      default: ''
+      // Allow both String (for URLs) and Object (for imported images)
+      type: [String, Object],
+      default: () => stScript
+    }
+  },
+  computed: {
+    // This computed property handles both cases
+    finalImageSrc() {
+      if (typeof this.imageSrc === 'object' && this.imageSrc.src) {
+        return this.imageSrc.src; // Use the 'src' property from the imported image object
+      }
+      return this.imageSrc; // Assume it's a string URL
     }
   }
 }

@@ -3,7 +3,6 @@ import Layout from '../layouts/Layout.astro';
 import { getPrintifyData, getPrintifyProducts } from '../lib/printify';
 import { toSlug } from '../lib/utils';
 import HeroBanner from '../components/HeroBanner.vue';
-// import stScript from '/src/assets/st-script.png';
 import ProductCard from '../components/ProductCard.vue';
 
 const shopsResponse = await getPrintifyData();
@@ -42,8 +41,6 @@ const visibleCategories = categoriesWithData.filter(category => category.product
       title="Welcome to Smalltime"
       description="Unique designs on quality products. Find your new favorite thing."
       buttonText="Explore All Products"
-      imageSrc="/src/assets/st-script.png"
-      backgroundColor="#f0fdf4"
   />
 
   <div class="category-grid-container">

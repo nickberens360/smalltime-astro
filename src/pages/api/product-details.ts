@@ -1,6 +1,8 @@
 import type { APIRoute } from 'astro';
 import { getPrintifyProduct } from '../../lib/printify';
 
+export const prerender = false;
+
 export const GET: APIRoute = async ({ request }) => {
     const url = new URL(request.url);
     const shopId = url.searchParams.get('shopId');

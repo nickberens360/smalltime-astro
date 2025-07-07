@@ -19,7 +19,11 @@ export async function getStaticPaths() {
             shopSlug: toSlug(shop.title),
             productSlug: toSlug(product.title),
           },
-          props: { product },
+          props: {
+            product,
+            // We must pass the shop's ID here
+            shopId: shop.id
+          },
         });
       }
     }
@@ -29,7 +33,8 @@ export async function getStaticPaths() {
   return allPaths;
 }
 
-const { product } = Astro.props;
+// Ensure we receive both the product and the shopId from the props
+const { product, shopId } = Astro.props;
 ---
 
 <Layout title={product ? product.title : 'Product'}>
@@ -46,7 +51,7 @@ const { product } = Astro.props;
           <div class="product-info">
             <h1>{product.title}</h1>
             <div class="description" set:html={product.description}></div>
-            <ProductOptions client:load product={product} />
+            <ProductOptions client:load product={product} shopId={shopId} />
           </div>
         </div>
     ) : (

@@ -41,6 +41,11 @@ export default {
     product: {
       type: Object,
       required: true
+    },
+    // This prop is now correctly defined to receive the shopId
+    shopId: {
+      type: [String, Number],
+      required: true
     }
   },
   data() {
@@ -58,15 +63,10 @@ export default {
     },
     productId() {
       return this.product.id;
-    },
-    shopId() {
-      // This assumes shop_id is available on the product object from the API
-      return this.product.shop_id;
     }
   },
   created() {
     this.createOptionsMap();
-    // Pre-select the first available variant
     if (this.variants.length > 0) {
       this.selectedVariantId = this.variants[0].id;
     }
@@ -85,7 +85,6 @@ export default {
     getOptionLabels(optionIds) {
       return optionIds.map(id => {
         const option = this.optionsMap.get(id);
-        // Return only the value for a cleaner display (e.g., "Small / Blue")
         return option ? option.value : '';
       }).join(' / ');
     },
