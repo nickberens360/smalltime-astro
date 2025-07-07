@@ -5,16 +5,21 @@
     <div v-if="isLoading" class="loading-state">Loading...</div>
     <div v-if="error" class="error-message">{{ error }}</div>
 
-    <div v-if="product && variant" class="checkout-layout">
+    <div v-if="displayItems.length > 0" class="checkout-layout">
       <div class="order-summary">
         <h2>Order Summary</h2>
-        <div class="product-card">
-          <img :src="product.images[0].src" :alt="product.title" />
+        <div v-for="item in displayItems" :key="item.variant.id" class="product-card">
+          <img :src="item.product.images[0].src" :alt="item.product.title" />
           <div class="product-info">
-            <h3>{{ product.title }}</h3>
-            <p>{{ getOptionLabels(variant.options, product.options) }}</p>
-            <p class="price">${{ (variant.price / 100).toFixed(2) }}</p>
+            <h3>{{ item.product.title }}</h3>
+            <p>{{ getOptionLabels(item.variant.options, item.product.options) }}</p>
+            <p>Quantity: {{ item.quantity }}</p>
           </div>
+          <p class="price">${{ item.totalPrice.toFixed(2) }}</p>
+        </div>
+        <div class="total-summary">
+          <strong>Total:</strong>
+          <strong>${{ cartTotal.toFixed(2) }}</strong>
         </div>
       </div>
 
@@ -22,18 +27,6 @@
         <h2>Shipping Information</h2>
         <p><em>(Placeholder for Stripe/PayPal and shipping form)</em></p>
         <form>
-          <div class="form-group">
-            <label for="name">Full Name</label>
-            <input type="text" id="name" name="name" disabled />
-          </div>
-          <div class="form-group">
-            <label for="address">Address</label>
-            <input type="text" id="address" name="address" disabled />
-          </div>
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" disabled />
-          </div>
           <button type="submit" class="submit-button" disabled>
             Proceed to Payment
           </button>
@@ -47,38 +40,58 @@
 export default {
   data() {
     return {
-      product: null,
-      variant: null,
+      displayItems: [],
       error: null,
       isLoading: true,
     };
   },
-  async mounted() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const shopId = urlParams.get('shopId');
-    const productId = urlParams.get('productId');
-    const variantId = urlParams.get('variantId');
-
-    if (!shopId || !productId || !variantId) {
-      this.error = "Incomplete product information provided for checkout.";
-      this.isLoading = false;
-      return;
+  computed: {
+    cartTotal() {
+      return this.displayItems.reduce((total, item) => total + item.totalPrice, 0);
     }
-
+  },
+  async mounted() {
     try {
-      const response = await fetch(`/api/product-details?shopId=${shopId}&productId=${productId}`);
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || "Could not retrieve product details.");
+      const params = new URLSearchParams(window.location.search);
+      const cartItems = [];
+      let i = 0;
+      while (params.has(`variantId[${i}]`)) {
+        cartItems.push({
+          shopId: params.get(`shopId[${i}]`),
+          productId: params.get(`productId[${i}]`),
+          variantId: params.get(`variantId[${i}]`),
+          quantity: parseInt(params.get(`quantity[${i}]`) || '1', 10),
+        });
+        i++;
       }
 
-      this.product = result.product;
-      this.variant = this.product.variants.find(v => v.id.toString() === variantId);
-
-      if (!this.variant) {
-        throw new Error("Selected variant could not be found for this product.");
+      if (cartItems.length === 0) {
+        throw new Error("No items provided for checkout.");
       }
+
+      // Fetch details for all products concurrently
+      const productPromises = cartItems.map(item =>
+        fetch(`/api/product-details?shopId=${item.shopId}&productId=${item.productId}`)
+          .then(res => res.json())
+      );
+
+      const productResponses = await Promise.all(productPromises);
+
+      this.displayItems = cartItems.map((item, index) => {
+        const response = productResponses[index];
+        if (!response.success) throw new Error(`Could not load details for item #${index + 1}`);
+
+        const product = response.product;
+        const variant = product.variants.find(v => v.id.toString() === item.variantId);
+        if (!variant) throw new Error(`Could not find variant for item #${index + 1}`);
+
+        return {
+          product,
+          variant,
+          quantity: item.quantity,
+          totalPrice: (variant.price / 100) * item.quantity,
+        };
+      });
 
     } catch (err) {
       this.error = err instanceof Error ? err.message : String(err);
@@ -99,6 +112,7 @@ export default {
 </script>
 
 <style scoped>
+/* All the styles from the previous checkout page version go here */
 .checkout-container {
   max-width: 900px;
   margin: 2rem auto;
@@ -128,19 +142,39 @@ export default {
   display: flex;
   gap: 1rem;
   align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+.product-card:last-of-type {
+  border-bottom: none;
+  margin-bottom: 0;
 }
 .product-card img {
-  width: 100px;
-  height: 100px;
+  width: 80px;
+  height: 80px;
   object-fit: cover;
   border-radius: 4px;
 }
+.product-info {
+  flex-grow: 1;
+}
 .product-info h3 {
   margin: 0;
+  font-size: 1rem;
 }
 .price {
   font-weight: bold;
+  font-size: 1rem;
+  text-align: right;
+}
+.total-summary {
+  display: flex;
+  justify-content: space-between;
   font-size: 1.2rem;
+  padding-top: 1rem;
+  margin-top: 1rem;
+  border-top: 2px solid #333;
 }
 .form-group {
   margin-bottom: 1rem;

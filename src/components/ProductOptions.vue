@@ -8,7 +8,7 @@
           :key="variant.id"
           class="variant-item"
           :class="{ selected: variant.id === selectedVariantId }"
-          @click="selectVariant(variant.id)"
+          @click="selectVariant(variant)"
         >
           <div class="variant-info">
             <span>{{ getOptionLabels(variant.options) }}</span>
@@ -18,11 +18,9 @@
       </ul>
     </div>
 
-    <BuyButton
-      :shopId="shopId"
-      :productId="productId"
-      :selectedVariantId="selectedVariantId"
-    />
+    <button @click="addToCart" class="add-to-cart-button" :disabled="!selectedVariant">
+      Add to Cart
+    </button>
 
     <div class="tags" v-if="tags && tags.length">
       <span v-for="tag in tags" :key="tag" class="tag">{{ tag }}</span>
@@ -31,18 +29,15 @@
 </template>
 
 <script>
-import BuyButton from './BuyButton.vue';
+// Import the action directly
+import { addItem } from '../stores/cart';
 
 export default {
-  components: {
-    BuyButton
-  },
   props: {
     product: {
       type: Object,
       required: true
     },
-    // This prop is now correctly defined to receive the shopId
     shopId: {
       type: [String, Number],
       required: true
@@ -50,7 +45,7 @@ export default {
   },
   data() {
     return {
-      selectedVariantId: null,
+      selectedVariant: null,
       optionsMap: new Map()
     }
   },
@@ -61,14 +56,14 @@ export default {
     tags() {
       return this.product.tags;
     },
-    productId() {
-      return this.product.id;
+    selectedVariantId() {
+      return this.selectedVariant ? this.selectedVariant.id : null;
     }
   },
   created() {
     this.createOptionsMap();
     if (this.variants.length > 0) {
-      this.selectedVariantId = this.variants[0].id;
+      this.selectVariant(this.variants[0]);
     }
   },
   methods: {
@@ -88,8 +83,13 @@ export default {
         return option ? option.value : '';
       }).join(' / ');
     },
-    selectVariant(variantId) {
-      this.selectedVariantId = variantId;
+    selectVariant(variant) {
+      this.selectedVariant = variant;
+    },
+    addToCart() {
+      if (!this.selectedVariant) return;
+      // Call the imported addItem function
+      addItem(this.product, this.selectedVariant);
     }
   }
 };
@@ -122,6 +122,27 @@ export default {
 .price {
   font-weight: bold;
   font-size: 1.1rem;
+}
+.add-to-cart-button {
+  display: inline-block;
+  background-color: #2563eb;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  text-decoration: none;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  text-align: center;
+  transition: background-color 0.2s;
+  width: 100%;
+  cursor: pointer;
+}
+.add-to-cart-button:hover {
+  background-color: #1d4ed8;
+}
+.add-to-cart-button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
 }
 .tags {
   margin-top: 1.5rem;
