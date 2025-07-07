@@ -138,17 +138,17 @@ export default {
 .loading-state, .cart-empty { text-align: center; padding: 4rem; font-size: 1.2rem; color: #666; min-height: 300px; }
 .checkout-layout { display: grid; grid-template-columns: 1fr; gap: 2rem; }
 @media (min-width: 768px) { .checkout-layout { grid-template-columns: 1fr 1fr; } }
-.order-summary, .shipping-form { border: 1px solid #eee; padding: 2rem; border-radius: 8px; }
-.product-card { display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #eee; }
+.order-summary, .shipping-form { border: 1px solid var(--header-border); padding: 2rem; border-radius: 8px; }
+.product-card { display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--header-border); }
 .product-card:last-of-type { border-bottom: none; margin-bottom: 0; }
 .product-card img { width: 80px; height: 80px; object-fit: cover; border-radius: 4px; }
 .product-info { flex-grow: 1; }
 .product-info h3 { margin: 0; font-size: 1rem; }
 .price { font-weight: bold; font-size: 1rem; text-align: right; }
-.total-summary { display: flex; justify-content: space-between; font-size: 1.2rem; padding-top: 1rem; margin-top: 1rem; border-top: 2px solid #333; }
+.total-summary { display: flex; justify-content: space-between; font-size: 1.2rem; padding-top: 1rem; margin-top: 1rem; border-top: 2px solid var(--text-color); }
 .form-group { margin-bottom: 1rem; }
 .form-group label { display: block; margin-bottom: 0.5rem; }
 .form-group input { width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 4px; }
-.submit-button { width: 100%; padding: 1rem; background-color: #9ca3af; color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: not-allowed; }
+.submit-button { width: 100%; padding: 1rem; background-color: var(--button-disabled-background); color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: not-allowed; }
 .error-message { color: red; text-align: center; padding: 2rem; }
 </style>

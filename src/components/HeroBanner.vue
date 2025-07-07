@@ -3,20 +3,21 @@
     <div class="hero-content">
       <div class="hero-image">
         <slot name="image">
-          <img v-if="finalImageSrc" :src="finalImageSrc" alt="Hero image" />
+          <img v-if="isMounted" :src="finalImageSrc" alt="Hero image" />
         </slot>
       </div>
-      <div class="hero-text">
-        <h1 v-if="title">{{ title }}</h1>
-        <p v-if="description">{{ description }}</p>
-        <button class="cta-button" v-if="buttonText">{{ buttonText }}</button>
-      </div>
+<!--      <div class="hero-text">-->
+<!--        <h1 v-if="title">{{ title }}</h1>-->
+<!--        <p v-if="description">{{ description }}</p>-->
+<!--        <button class="cta-button" v-if="buttonText">{{ buttonText }}</button>-->
+<!--      </div>-->
     </div>
   </div>
 </template>
 
 <script>
-import { computed } from 'vue';
+// Import additional helpers from Vue for the full Composition API approach
+import { computed, ref, onMounted } from 'vue';
 import { useThemeStore } from '../stores/theme';
 
 export default {
@@ -46,27 +47,34 @@ export default {
       default: null
     }
   },
-  setup(props) { // Corrected: Added 'props' as an argument here
+  setup(props) {
     const themeStore = useThemeStore();
+    const isMounted = ref(false);
 
     const finalImageSrc = computed(() => {
-      // This will now work correctly
+      // If a specific image is provided, always use it
       if (props.imageSrc) {
         if (typeof props.imageSrc === 'object' && props.imageSrc.src) {
           return props.imageSrc.src;
         }
         return props.imageSrc;
       }
+      // Otherwise, fall back to the theme-dependent logo
       return themeStore.isDarkMode ? '/images/st-script-light.png' : '/images/st-script.png';
     });
 
+    // onMounted is the Composition API equivalent of the mounted() hook
+    onMounted(() => {
+      isMounted.value = true;
+      // The theme is initialized only on the client, ensuring reactivity
+      themeStore.initTheme();
+    });
+
+    // Expose all necessary values to the template
     return {
-      themeStore,
       finalImageSrc,
+      isMounted,
     };
-  },
-  mounted() {
-    this.themeStore.initTheme();
   }
 }
 </script>

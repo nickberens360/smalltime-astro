@@ -2,7 +2,7 @@
   <header class="site-header">
     <div class="header-container">
       <a href="/" class="logo">
-        <img :src="logoSrc" alt="Smalltime Logo" />
+        <img v-if="isMounted" :src="logoSrc" alt="Smalltime Logo" />
       </a>
 
       <nav class="main-nav desktop-only">
@@ -89,6 +89,7 @@ export default {
       navigation: [],
       openMobileSubmenu: null,
       isMobileMenuOpen: false,
+      isMounted: false, // Add a flag to track if the component is mounted
     };
   },
   methods: {
@@ -112,6 +113,9 @@ export default {
     }
   },
   async mounted() {
+    // Set the flag to true now that we are on the client
+    this.isMounted = true;
+
     // Initialize the theme here, AFTER the component has mounted on the client.
     // This prevents a hydration mismatch between the server-rendered HTML
     // and the client-side Vue app.

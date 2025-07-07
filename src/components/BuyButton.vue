@@ -37,7 +37,7 @@ export default {
 <style scoped>
 .buy-button {
   display: inline-block;
-  background-color: #2563eb;
+  background-color: var(--button-primary-background);
   color: white;
   padding: 0.75rem 1.5rem;
   text-decoration: none;
@@ -48,11 +48,11 @@ export default {
 }
 
 .buy-button:hover {
-  background-color: #1d4ed8;
+  background-color: var(--button-primary-hover-background);
 }
 
 .buy-button.disabled {
-  background-color: #9ca3af;
+  background-color: var(--button-disabled-background);
   cursor: not-allowed;
   pointer-events: none;
 }

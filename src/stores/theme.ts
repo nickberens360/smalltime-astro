@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 
 export const useThemeStore = defineStore('theme', {
     state: () => ({
-        isDarkMode: false,
+        isDarkMode: true, // Changed to true to make dark mode the default
     }),
     actions: {
         /**
@@ -14,6 +14,7 @@ export const useThemeStore = defineStore('theme', {
 
             const savedTheme = localStorage.getItem('theme');
             const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            // The default state is now dark, but localStorage or system preference can override it.
             const newTheme = savedTheme || (prefersDark ? 'dark' : 'light');
             this.setTheme(newTheme);
         },

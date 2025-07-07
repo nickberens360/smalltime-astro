@@ -108,12 +108,13 @@ export default {
 .cart-drawer {
   position: absolute;
   top: 0;
-  left: 0;
+  right: 0; /* Changed from left to right for conventional cart placement */
   width: 90%;
   max-width: 400px;
   height: 100%;
-  background-color: white;
-  transform: translateX(-100%);
+  background-color: var(--card-background); /* Themed */
+  color: var(--text-color); /* Themed */
+  transform: translateX(100%); /* Changed for right-side drawer */
   transition: transform 0.3s ease;
   display: flex;
   flex-direction: column;
@@ -126,7 +127,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--header-border); /* Themed */
 }
 .cart-header h2 {
   margin: 0;
@@ -136,6 +137,7 @@ export default {
   border: none;
   font-size: 2rem;
   cursor: pointer;
+  color: var(--text-color); /* Themed */
 }
 .cart-content {
   flex-grow: 1;
@@ -147,7 +149,7 @@ export default {
 .cart-empty {
   text-align: center;
   padding: 4rem 2rem;
-  color: #666;
+  color: var(--product-description-color); /* Themed */
 }
 .cart-items {
   list-style: none;
@@ -159,7 +161,7 @@ export default {
   gap: 1rem;
   padding-bottom: 1.5rem;
   margin-bottom: 1.5rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--header-border); /* Themed */
 }
 .item-image {
   width: 80px;
@@ -176,7 +178,7 @@ export default {
 }
 .item-options {
   font-size: 0.8rem;
-  color: #666;
+  color: var(--product-description-color); /* Themed */
   margin: 0;
 }
 .item-quantity {
@@ -189,7 +191,8 @@ export default {
   font-weight: bold;
 }
 .remove-item-button {
-  background: #eee;
+  background: var(--link-hover-background); /* Themed */
+  color: var(--text-color); /* Themed */
   border: none;
   border-radius: 50%;
   width: 24px;
@@ -201,7 +204,7 @@ export default {
 }
 .cart-footer {
   margin-top: auto;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--header-border); /* Themed */
   padding-top: 1.5rem;
 }
 .cart-total {
@@ -215,7 +218,7 @@ export default {
   display: block;
   width: 100%;
   padding: 1rem;
-  background-color: #2563eb;
+  background-color: var(--button-primary-background); /* Themed */
   color: white;
   text-align: center;
   text-decoration: none;
@@ -224,8 +227,11 @@ export default {
   font-weight: bold;
   transition: background-color 0.2s;
 }
+.checkout-button:hover {
+  background-color: var(--button-primary-hover-background); /* Themed */
+}
 .checkout-button.disabled {
-  background-color: #9ca3af;
+  background-color: var(--button-disabled-background); /* Themed */
   cursor: not-allowed;
   pointer-events: none;
 }

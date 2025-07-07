@@ -106,7 +106,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  border: 2px solid #eee;
+  border: 2px solid var(--header-border); /* Themed */
   border-radius: 8px;
   margin-bottom: 0.5rem;
   cursor: pointer;
@@ -116,8 +116,8 @@ export default {
   border-color: #ccc;
 }
 .variant-item.selected {
-  border-color: #2563eb;
-  box-shadow: 0 0 5px rgba(37, 99, 235, 0.5);
+  border-color: var(--button-primary-background); /* Themed */
+  box-shadow: 0 0 5px var(--button-primary-background); /* Themed */
 }
 .price {
   font-weight: bold;
@@ -125,7 +125,7 @@ export default {
 }
 .add-to-cart-button {
   display: inline-block;
-  background-color: #2563eb;
+  background-color: var(--button-primary-background); /* Themed */
   color: white;
   padding: 0.75rem 1.5rem;
   text-decoration: none;
@@ -138,10 +138,10 @@ export default {
   cursor: pointer;
 }
 .add-to-cart-button:hover {
-  background-color: #1d4ed8;
+  background-color: var(--button-primary-hover-background); /* Themed */
 }
 .add-to-cart-button:disabled {
-  background-color: #9ca3af;
+  background-color: var(--button-disabled-background); /* Themed */
   cursor: not-allowed;
 }
 .tags {

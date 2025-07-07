@@ -71,7 +71,7 @@ export default {
   background-color: #f9f9f9;
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #eee;
+  border: 1px solid var(--header-border); /* Themed */
 }
 
 .main-image {
@@ -88,9 +88,9 @@ export default {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: var(--background-color);
   border: none;
-  color: #333;
+  color: var(--text-color);
   font-size: 1.5rem;
   cursor: pointer;
   padding: 0.5rem;
@@ -105,7 +105,7 @@ export default {
 }
 
 .nav-button:hover {
-  background-color: rgba(255, 255, 255, 1);
+  background-color: var(--link-hover-background);
 }
 
 .nav-button.prev {
@@ -138,7 +138,7 @@ export default {
 }
 
 .thumbnail.active {
-  border-color: #2563eb;
+  border-color: var(--button-primary-background);
 }
 
 .thumbnail img {

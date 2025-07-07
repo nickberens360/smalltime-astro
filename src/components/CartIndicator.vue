@@ -21,7 +21,6 @@ export default {
     };
   },
   mounted() {
-    // This ensures that the component only renders its state-dependent parts on the client
     this.isMounted = true;
   }
 };
@@ -34,13 +33,16 @@ export default {
   border: none;
   cursor: pointer;
   padding: 0.5rem;
+  /* Ensure the SVG icon inherits the current text color from the theme */
+  color: var(--text-color);
 }
 .item-count {
   position: absolute;
   top: 0;
   right: 0;
-  background-color: #ef4444;
-  color: white;
+  /* Use theme variables for the notification badge */
+  background-color: var(--button-primary-background);
+  color: white; /* White text works well on both light and dark primary buttons */
   border-radius: 50%;
   width: 20px;
   height: 20px;
