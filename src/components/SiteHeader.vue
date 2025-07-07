@@ -42,14 +42,16 @@
                 <span>{{ shop.shopName }}</span>
                 <span class="submenu-arrow" :class="{ 'is-open': openMobileSubmenu === shop.shopSlug }">›</span>
               </div>
-              <ul v-if="openMobileSubmenu === shop.shopSlug" class="mobile-submenu">
-                <li>
-                  <a :href="`/category/${shop.shopSlug}`">All {{ shop.shopName }}</a>
-                </li>
-                <li v-for="tag in shop.tags" :key="tag.tagSlug">
-                  <a :href="`/category/${shop.shopSlug}/${tag.tagSlug}`">{{ tag.tagName }}</a>
-                </li>
-              </ul>
+              <transition name="submenu-slide">
+                <ul v-if="openMobileSubmenu === shop.shopSlug" class="mobile-submenu">
+                  <li>
+                    <a :href="`/category/${shop.shopSlug}`">All {{ shop.shopName }}</a>
+                  </li>
+                  <li v-for="tag in shop.tags" :key="tag.tagSlug">
+                    <a :href="`/category/${shop.shopSlug}/${tag.tagSlug}`">{{ tag.tagName }}</a>
+                  </li>
+                </ul>
+              </transition>
             </li>
           </ul>
         </nav>
@@ -86,7 +88,6 @@ export default {
     }
   },
   watch: {
-    // Watch for changes to the mobile menu state to lock/unlock body scroll
     isMobileMenuOpen(newVal) {
       if (typeof window !== 'undefined' && window.document) {
         if (newVal) {
@@ -111,13 +112,13 @@ export default {
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.handleResize);
-    // Ensure the class is removed if the component is ever destroyed
     document.body.classList.remove('no-scroll');
   }
 };
 </script>
 
 <style scoped>
+/* --- Base Header Styles (Unchanged) --- */
 .site-header {
   background-color: #fff;
   border-bottom: 1px solid #e5e7eb;
@@ -129,21 +130,22 @@ export default {
 .header-container {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   height: 64px;
 }
 .logo {
   display: flex;
   align-items: center;
   height: 40px;
+  margin-right: auto;
 }
 .logo img {
   height: 100%;
   width: auto;
 }
 
-/* --- Desktop Nav --- */
-.main-nav { display: none; } /* Hidden on mobile */
+/* --- Desktop Nav (Unchanged) --- */
+.main-nav { display: none; }
 @media (min-width: 768px) {
   .main-nav { display: flex; }
 }
@@ -154,9 +156,7 @@ export default {
   padding: 0;
   gap: 0.5rem;
 }
-.nav-item {
-  position: relative;
-}
+.nav-item { position: relative; }
 .nav-item > a {
   display: block;
   padding: 1rem;
@@ -172,7 +172,7 @@ export default {
 }
 .dropdown-menu {
   position: absolute;
-  top: 95%; /* Slightly overlap the header */
+  top: 95%;
   left: 0;
   background-color: white;
   border: 1px solid #e5e7eb;
@@ -205,7 +205,7 @@ export default {
   color: #111827;
 }
 
-/* --- Header Actions --- */
+/* --- Header Actions (Unchanged) --- */
 .header-actions {
   display: flex;
   align-items: center;
@@ -216,7 +216,7 @@ export default {
   border: none;
   cursor: pointer;
   padding: 0.5rem;
-  display: flex; /* Aligns icon inside */
+  display: flex;
   align-items: center;
   justify-content: center;
 }
@@ -224,21 +224,22 @@ export default {
   .mobile-only { display: none; }
 }
 
-/* --- Mobile Menu --- */
+/* --- NEW / UPDATED Mobile Menu Styles --- */
 .mobile-nav-menu {
   position: fixed;
-  top: 65px; /* Position it below the header */
+  top: 65px;
   left: 0;
   width: 100%;
   height: calc(100vh - 65px);
-  background-color: white;
+  background-color: #f9fafb; /* Lighter background for the whole menu */
   z-index: 99;
-  padding: 1rem 2rem;
+  padding: 0.5rem 0; /* Vertical padding */
   box-sizing: border-box;
   overflow-y: auto;
   border-top: 1px solid #e5e7eb;
 }
-/* Transition for the mobile menu */
+
+/* Main mobile menu container transition */
 .slide-fade-enter-active,
 .slide-fade-leave-active {
   transition: all 0.3s ease-out;
@@ -248,9 +249,18 @@ export default {
   transform: translateX(-100%);
   opacity: 0;
 }
-.mobile-nav-menu nav ul { list-style: none; padding: 0; margin: 0; }
-.mobile-nav-item { border-bottom: 1px solid #e5e7eb; }
-.mobile-nav-toggle-button {
+
+.mobile-nav-menu nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.mobile-nav-item {
+  /* No styles needed here now */
+}
+
+.mobile-nav-top-level {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -258,36 +268,69 @@ export default {
   background: none;
   border: none;
   text-align: left;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #111827;
-  padding: 1rem 0;
+  font-size: 1.125rem; /* 18px */
+  font-weight: 500;
+  color: #1f2937;
+  padding: 1rem 1.5rem;
   cursor: pointer;
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.2s;
 }
+.mobile-nav-top-level:hover {
+  background-color: #f3f4f6;
+}
+
 .submenu-arrow {
   display: inline-block;
-  transition: transform 0.2s;
-  font-size: 1.5rem;
+  transition: transform 0.3s ease;
+  font-size: 1.75rem; /* Larger for easier tapping */
+  line-height: 1;
   color: #9ca3af;
 }
+
 .submenu-arrow.is-open {
   transform: rotate(90deg);
-  color: #374151;
+  color: #1f2937; /* Darken arrow when open */
 }
+
+/* Submenu animation */
+.submenu-slide-enter-active,
+.submenu-slide-leave-active {
+  transition: all 0.4s ease-in-out;
+  max-height: 600px; /* High value to allow for content */
+  overflow: hidden;
+}
+.submenu-slide-enter-from,
+.submenu-slide-leave-to {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
 .mobile-submenu {
   list-style: none;
-  padding-left: 1rem;
-  margin: 0 0 1rem 0;
+  padding: 0.5rem 0;
+  margin: 0;
+  background-color: #fff; /* White background to stand out from the gray */
+  border-bottom: 1px solid #e5e7eb;
 }
+
 .mobile-submenu li a {
   display: block;
   font-size: 1rem;
   color: #374151;
   text-decoration: none;
-  padding: 0.75rem;
-  border-radius: 6px;
+  padding: 0.875rem 2.5rem; /* 14px 40px - for deep indent */
 }
+
 .mobile-submenu li a:hover {
+  color: #111827;
   background-color: #f3f4f6;
+}
+
+/* Style for the 'All' link to make it stand out */
+.mobile-submenu li:first-child a {
+  color: #111827;
+  font-weight: 500;
 }
 </style>
