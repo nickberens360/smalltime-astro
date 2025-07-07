@@ -1,6 +1,5 @@
 import { reactive, computed, watchEffect } from 'vue';
 
-// --- Helper function to get initial state from localStorage ---
 function getInitialState() {
     if (typeof window !== 'undefined') {
         const savedCart = localStorage.getItem('smalltime-cart');
@@ -20,7 +19,6 @@ function getInitialState() {
     };
 }
 
-// --- The Reactive Store ---
 export const cartState = reactive(getInitialState());
 
 if (typeof window !== 'undefined') {
@@ -29,7 +27,6 @@ if (typeof window !== 'undefined') {
     });
 }
 
-// --- Getters (Computed Properties) ---
 export const cartItemCount = computed(() => {
     return cartState.items.reduce((count, item) => count + item.quantity, 0);
 });
@@ -40,7 +37,6 @@ export const cartTotal = computed(() => {
     }, 0);
 });
 
-// --- Actions (Functions that mutate state) ---
 export function openDrawer() {
     cartState.isDrawerOpen = true;
 }
@@ -72,16 +68,4 @@ export function addItem(product, variant, quantity = 1) {
 
 export function removeItem(variantId) {
     cartState.items = cartState.items.filter(item => item.variantId !== variantId);
-}
-
-// This is the corrected function
-export function getCheckoutUrl() {
-    const params = new URLSearchParams();
-    cartState.items.forEach((item, index) => {
-        params.append(`shopId[${index}]`, item.shopId);
-        params.append(`productId[${index}]`, item.productId);
-        params.append(`variantId[${index}]`, item.variantId);
-        params.append(`quantity[${index}]`, item.quantity);
-    });
-    return `/checkout?${params.toString()}`;
 }

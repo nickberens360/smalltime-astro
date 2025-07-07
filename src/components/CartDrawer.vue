@@ -30,7 +30,7 @@
               <span>Subtotal</span>
               <span>${{ cartTotal.toFixed(2) }}</span>
             </div>
-            <a :href="checkoutUrl" class="checkout-button">
+            <a href="/checkout" class="checkout-button" :class="{ 'disabled': cartState.items.length === 0 }">
               Proceed to Checkout
             </a>
           </div>
@@ -41,8 +41,7 @@
 </template>
 
 <script>
-import { computed } from 'vue';
-import { cartState, cartTotal, closeDrawer, removeItem, getCheckoutUrl } from '../stores/cart';
+import { cartState, cartTotal, closeDrawer, removeItem } from '../stores/cart';
 
 export default {
   data() {
@@ -66,15 +65,12 @@ export default {
       return item.variantOptions.map(id => map.get(id)).join(' / ');
     };
 
-    const checkoutUrl = computed(() => getCheckoutUrl());
-
     return {
       cartState,
       cartTotal,
       closeDrawer,
       removeItem,
       getOptionLabels,
-      checkoutUrl
     };
   },
   mounted() {
@@ -226,5 +222,11 @@ export default {
   border-radius: 8px;
   font-size: 1rem;
   font-weight: bold;
+  transition: background-color 0.2s;
+}
+.checkout-button.disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 </style>
