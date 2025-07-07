@@ -6,8 +6,8 @@ import netlify from '@astrojs/netlify';
 // https://astro.build/config
 export default defineConfig({
   integrations: [vue()],
-  // Change output from 'static' to 'hybrid' to support both static pages and server routes
-  output: 'hybrid',
-  // Re-add the Netlify adapter
+  // Set the output to 'server' to enable server-side capabilities
+  output: 'server',
+  // Re-add the Netlify adapter to handle the deployment correctly
   adapter: netlify(),
 });
