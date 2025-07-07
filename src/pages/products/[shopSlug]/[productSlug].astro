@@ -5,6 +5,8 @@ import { toSlug } from '../../../lib/utils';
 import ImageSlider from '../../../components/ImageSlider.vue';
 import ProductOptions from '../../../components/ProductOptions.vue';
 
+export const prerender = true;
+
 export async function getStaticPaths() {
   console.log("Fetching all products to build static pages...");
   const { shops, productsByShop } = await fetchAllPrintifyData();
@@ -21,7 +23,6 @@ export async function getStaticPaths() {
           },
           props: {
             product,
-            // We must pass the shop's ID here
             shopId: shop.id
           },
         });
@@ -33,10 +34,8 @@ export async function getStaticPaths() {
   return allPaths;
 }
 
-// Ensure we receive both the product and the shopId from the props
 const { product, shopId } = Astro.props;
 ---
-
 <Layout title={product ? product.title : 'Product'}>
   <div class="product-detail-container">
     {product ? (

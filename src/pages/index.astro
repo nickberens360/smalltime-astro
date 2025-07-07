@@ -5,37 +5,36 @@ import { toSlug } from '../lib/utils';
 import HeroBanner from '../components/HeroBanner.vue';
 import ProductCard from '../components/ProductCard.vue';
 
-// Use the centralized, cached, and filtered data-fetching function
+// By adding this line, we tell Astro to pre-build this page as static HTML.
+export const prerender = true;
+
 const { shops, productsByShop } = await fetchAllPrintifyData();
 
 const categoriesWithImages = shops.map(shop => {
   const products = productsByShop.get(shop.id) || [];
-  // Find the first product that is set to visible to use for the thumbnail
   const firstVisibleProduct = products.find(p => p.visible);
 
   const imageUrl = firstVisibleProduct
       ? firstVisibleProduct.images.find(img => img.is_default)?.src || firstVisibleProduct.images[0]?.src
-      : '/src/assets/placeholder.png'; // Fallback image
+      : '/src/assets/placeholder.png';
 
   return {
     title: shop.title,
     slug: toSlug(shop.title),
     imageSrc: imageUrl,
-    // We can also use the count of visible products if needed elsewhere
     productCount: products.filter(p => p.visible).length
   };
 })
-    // Ensure we don't show a category link if it has no visible products
     .filter(category => category.productCount > 0);
 ---
-
 <Layout title="Smalltime - Welcome to the Shop">
   <HeroBanner
       client:load
       title="Welcome to Smalltime"
       description="Unique designs on quality products. Find your new favorite thing."
       buttonText="Explore All Products"
-      imageSrc="/src/assets/st-script.png"
+      imageSrc="/images/st-script.png"
+      backgroundColor="#f0fdf4"
   />
 
   <div class="category-grid-container">

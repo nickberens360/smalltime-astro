@@ -4,6 +4,9 @@ import { toSlug } from '../../lib/utils';
 import Layout from '../../layouts/Layout.astro';
 import ProductCard from '../../components/ProductCard.vue';
 
+// This line ensures getStaticPaths is used and the pages are pre-rendered.
+export const prerender = true;
+
 export async function getStaticPaths() {
   const { shops } = await fetchAllPrintifyData();
   return shops.map((shop) => ({
@@ -14,13 +17,10 @@ export async function getStaticPaths() {
 
 const { shop } = Astro.props;
 const { productsByShop } = await fetchAllPrintifyData();
-
 const categoryTitle = shop.title;
 const shopSlug = toSlug(shop.title);
-
 const allProducts = productsByShop.get(shop.id) || [];
 const visibleProducts = allProducts.filter(p => p.visible);
-
 const allTags = new Set<string>();
 visibleProducts.forEach(product => {
   product.tags.forEach(tag => allTags.add(tag));
